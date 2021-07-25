@@ -104,7 +104,7 @@ Resources:
 
   # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
   Blockchains:
-    Type: AWS::Serverless::Blockchains
+    Type: AWS::Serverless::SimpleTable
     Properties:
       PrimaryKey:
         Name: id

@@ -6,5 +6,15 @@
  * @param defaultValue placeholder if not present
  * @returns environment variable result or default value
  */
-// @ts-ignore
-export const getString = (variable?: string, defaultValue: string) : string => process.env[variable] !== undefined ? process.env[variable] : defaultValue
+export const getString = (variable: string | undefined, defaultValue: string) : string => { 
+  if (!variable) {
+    return defaultValue
+  }
+
+  const value = process.env[variable] 
+  if (value) {
+    return value
+  }
+
+  return defaultValue
+}

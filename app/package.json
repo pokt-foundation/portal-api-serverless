@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "fast-compile": "tsc",
+    "fast-compile": "tsc -p tsconfig.json",
     "compile": "eslint . --ext .ts && tsc",
     "lint": "eslint . --ext .ts",
     "test": "eslint . --ext .ts && tsc && mocha",

@@ -1,5 +1,4 @@
 import { LambdaApp } from '../lambda-app';
-import { ApiGatewayEvent } from '../../common/apigateway/apigateway-event';
 import { ApiGatewayResponse } from '../../common/apigateway/apigateway-response';
 import { BlockchainRepository } from '../../common/repositories/blockchain.repository';
 
