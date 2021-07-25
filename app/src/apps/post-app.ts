@@ -1,7 +1,7 @@
 import { ApiGatewayEvent } from '../common/apigateway/apigateway-event';
 import { ApiGatewayResponse } from '../common/apigateway/apigateway-response';
-import { TodoRepository } from '../common/todo-repository';
-import { TodoItem } from '../common/todo-item';
+import { TodoRepository } from '../common/repositories/todo-repository';
+import { TodoItem } from '../common/models/todo-item';
 
 import { LambdaApp } from './lambda-app';
 

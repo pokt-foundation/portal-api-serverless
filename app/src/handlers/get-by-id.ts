@@ -1,7 +1,7 @@
 import { ApiGatewayEvent } from '../common/apigateway/apigateway-event';
 import { ApiGatewayResponse } from '../common/apigateway/apigateway-response';
 import { GetByIdApp } from '../apps/get-by-id-app';
-import { TodoDynamoClientRepository } from '../common/todo-dynamoclient-repository';
+import { TodoDynamoClientRepository } from '../common/repositories/todo-dynamoclient-repository';
 import { LambdaApp } from '../apps/lambda-app';
 
 /**

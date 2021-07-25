@@ -3,8 +3,8 @@ import { expect } from 'chai';
 import { Mock, It, Times } from 'moq.ts';
 
 import { GetByIdApp } from '../../src/apps/get-by-id-app';
-import { TodoItem } from '../../src/common/todo-item';
-import { TodoRepository } from '../../src/common/todo-repository';
+import { TodoItem } from '../../src/common/models/todo-item';
+import { TodoRepository } from '../../src/common/repositories/todo-repository';
 import { ApiGatewayResponse } from '../../src/common/apigateway/apigateway-response';
 
 import { ApiGatewayEventMock } from '../mocks/apigateway-event-mock';

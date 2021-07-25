@@ -1,5 +1,4 @@
-import { TodoItem } from './todo-item';
-
+import { TodoItem } from '../models/todo-item';
 export interface TodoRepository {
     putTodo(todoItem: TodoItem, table: string): Promise<void>;
     getTodoById(id: string, table: string): Promise<TodoItem>;

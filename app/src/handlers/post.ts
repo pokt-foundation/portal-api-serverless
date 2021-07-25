@@ -1,6 +1,6 @@
 import { ApiGatewayEvent } from '../common/apigateway/apigateway-event';
 import { ApiGatewayResponse } from '../common/apigateway/apigateway-response';
-import { TodoDynamoClientRepository } from '../common/todo-dynamoclient-repository';
+import { TodoDynamoClientRepository } from '../common/repositories/todo-dynamoclient-repository';
 import { PostApp } from '../apps/post-app';
 import { LambdaApp } from '../apps/lambda-app';
 

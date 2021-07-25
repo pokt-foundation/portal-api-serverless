@@ -1,6 +1,6 @@
 import { DynamoDB } from 'aws-sdk';
 
-import { TodoItem } from './todo-item';
+import { TodoItem } from '../models/todo-item';
 import { TodoRepository } from './todo-repository';
 
 export class TodoDynamoClientRepository implements TodoRepository {
