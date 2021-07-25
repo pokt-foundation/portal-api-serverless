@@ -7,5 +7,5 @@ import { ApiGatewayResponse } from '../common/apigateway/apigateway-response';
  * 
  */
 export interface LambdaApp {
-    run(event: ApiGatewayEvent): Promise<ApiGatewayResponse>;
+    run(event?: ApiGatewayEvent): Promise<ApiGatewayResponse>;
 }

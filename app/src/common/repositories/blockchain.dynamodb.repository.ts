@@ -4,7 +4,7 @@ import { DynamoDB } from 'aws-sdk';
 import { getString } from '../env/index';
 import { Blockchain } from '../models/blockchain';
 
-const BLOCKCHAIN_TABLE_NAME = 'blockchains'
+const TABLE_NAME = 'blockchains'
 
 export class BlockchainDynamoClientRepository implements BlockchainRepository {
   table: string
@@ -12,12 +12,12 @@ export class BlockchainDynamoClientRepository implements BlockchainRepository {
 
   constructor(table?: string) {
     this.docClient = new DynamoDB.DocumentClient()
-    this.table = getString(table, BLOCKCHAIN_TABLE_NAME)
+    this.table = getString(table, TABLE_NAME)
   }
 
   // Retrieves all the available blockchains on the table
   // TODO: Add pagination, error handling
-  async getBlockchains(): Promise<Blockchain[]> {
+  async getAllBlockchains(): Promise<Blockchain[]> {
     const blockchains : Blockchain[] = []
     let lastEvaluatedKey;
 
