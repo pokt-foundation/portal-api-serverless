@@ -12,6 +12,44 @@ Description: >-
 Transform:
 - AWS::Serverless-2016-10-31
 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "VPC Config"
+        Parameters:
+          - "pVpcName"
+          - "pVpcCIDR"
+          - "pPrivateSubnet1CIDR"
+          - "pPublicSubnet1CIDR"
+
+    ParameterLabels:
+      pVpcName:
+        default: "Name of VPC"
+      pVpcCIDR:
+        default: "CIDR for VPC"
+      pPrivateSubnet1CIDR:
+        default: "CIDR for Private Subnet 1"
+
+Parameters:
+  pVpcName:
+    Description: "Name of the VPC"
+    Type: "String"
+    Default: "portal-api-vpc"
+  pVpcCIDR:
+    Description: "CIDR block for VPC (recommend /16)"
+    Type: "String"
+    Default: "10.100.0.0/16"
+  pPrivateSubnet1CIDR:
+    Description: "CIDR block for Private Subnet"
+    Type: "String"
+    Default: "10.100.0.0/18"
+
+    ## private subnet 2: 10.100.128.0/18
+    ## public subnet 2: 10.100.192.0/18
+
+
 # Resources declares the AWS resources that you want to include in the stack
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
 Resources:
@@ -19,13 +57,13 @@ Resources:
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
   # This is a Lambda function config associated with the source code: blockchains/get-all-blockchains.ts
-  getBlockchainsFunction:
+  GetBlockchains:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: makefile
     Properties:
       CodeUri: app/
-      Handler: dist/src/handlers/blockchains/get-all.handler
+      Handler: dist/handlers/blockchains/get-all.handler
       Runtime: nodejs12.x
       MemorySize: 128
       Timeout: 100
@@ -34,10 +72,20 @@ Resources:
         # Give Create/Read/Update/Delete Permissions to the SampleTable
         - DynamoDBCrudPolicy:
             TableName: !Ref Blockchains
+        - "AWSLambdaVPCAccessExecutionRole"
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref FunctionSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet1
       Environment:
         Variables:
           # Make table name accessible as environment variable from function code during execution
           TABLE_NAME: !Ref Blockchains
+          ELASTICACHE_HOST:
+            Fn::GetAtt: ["ECCluster", "RedisEndpoint.Address"]
+          ELASTICACHE_PORT:
+            Fn::GetAtt: ["ECCluster", "RedisEndpoint.Port"]
       Events:
         Api:
           Type: Api
@@ -55,8 +103,99 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 2
         WriteCapacityUnits: 2
+      TableName: "Blockchains"
+  Applications:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      TableName: "Applications"
+  LoadBalancers:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      TableName: "LoadBalancers"
+
+  #
+  # ElastiCache
+  #
+  ECCluster:
+    Type: "AWS::ElastiCache::CacheCluster"
+    Properties:
+      Engine: "redis"
+      CacheNodeType: "cache.t2.micro"
+      NumCacheNodes: 1
+      VpcSecurityGroupIds:
+        - !GetAtt ECSecurityGroup.GroupId
+      CacheSubnetGroupName: !Ref ECSubnetGroup
+
+  ECSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "portal-api - ElastiCache Security Group"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref FunctionSecurityGroup
+
+  ECSubnetGroup:
+    Type: "AWS::ElastiCache::SubnetGroup"
+    Properties:
+      Description: "portal-api - ElastiCache Subnet Group"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+
+  FunctionSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "portal-api - Lambda Function Security Group"
+      VpcId: !Ref VPC
+
+  # Network configuration
+  VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: !Ref "pVpcCIDR"
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      Tags:
+        -
+          Key: "Name"
+          Value: !Ref "pVpcName"
+
+  PrivateSubnet1:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: !Ref "pPrivateSubnet1CIDR"
+      VpcId: !Ref VPC
+      Tags:
+        -
+          Key: "Name"
+          Value: !Sub
+            - "${VPC_NAME} Private Subnet 1"
+            - VPC_NAME: !Ref pVpcName
 
 Outputs:
   WebEndpoint:
     Description: "API Gateway endpoint URL for Prod stage"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  oVPC:
+    Value: !Ref VPC
+    Description: "portal-api VPC"
+  oPrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+    Description: "portal-api Private Subnet 1"
+
