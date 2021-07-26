@@ -31,7 +31,9 @@ Metadata:
         default: "CIDR for VPC"
       pPrivateSubnet1CIDR:
         default: "CIDR for Private Subnet 1"
-
+      pPublicSubnet1CIDR:
+        default: "CIDR for Public Subnet 1"
+      
 Parameters:
   pVpcName:
     Description: "Name of the VPC"
@@ -45,7 +47,10 @@ Parameters:
     Description: "CIDR block for Private Subnet"
     Type: "String"
     Default: "10.100.0.0/18"
-
+  pPublicSubnet1CIDR:
+    Description: "CIDR block for Public Subnet"
+    Type: "String"
+    Default: "10.100.64.0/18"
     ## private subnet 2: 10.100.128.0/18
     ## public subnet 2: 10.100.192.0/18
 
@@ -62,6 +67,7 @@ Resources:
     Metadata:
       BuildMethod: makefile
     Properties:
+      FunctionName: get-blockchains
       CodeUri: app/
       Handler: dist/handlers/blockchains/get-all.handler
       Runtime: nodejs12.x
@@ -92,6 +98,43 @@ Resources:
           Properties:
             Path: /blockchains
             Method: GET
+  RelayApplication:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: relay-application
+      CodeUri: app/
+      Handler: dist/handlers/applications/relay-app.handler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Description: Relay an application through a node
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the SampleTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Applications
+        - "AWSLambdaVPCAccessExecutionRole"
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref FunctionSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet1
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          TABLE_NAME: !Ref Applications
+          ELASTICACHE_HOST:
+            Fn::GetAtt: ["ECCluster", "RedisEndpoint.Address"]
+          ELASTICACHE_PORT:
+            Fn::GetAtt: ["ECCluster", "RedisEndpoint.Port"]
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /relay/{id}
+            Method: GET
+
 
   # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
   Blockchains:
@@ -187,6 +230,92 @@ Resources:
           Value: !Sub
             - "${VPC_NAME} Private Subnet 1"
             - VPC_NAME: !Ref pVpcName
+
+  PublicSubnet1:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: !Ref "pPublicSubnet1CIDR"
+      VpcId: !Ref VPC
+      Tags:
+        -
+          Key: "Name"
+          Value: !Sub
+            - "${VPC_NAME} Public Subnet 1"
+            - VPC_NAME: !Ref pVpcName
+
+  PrivateRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        -
+          Key: "Name"
+          Value: "public-bikes-private-routetable"
+
+  PublicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        -
+          Key: "Name"
+          Value: "public-bikes-public-routetable"
+
+  IGW:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        -
+          Key: "Name"
+          Value: "public-bikes-igw"
+
+  IgwAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    DependsOn:
+      - "IGW"
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+
+  NatEIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: "vpc"
+
+  NatGateway:
+    Type: "AWS::EC2::NatGateway"
+    DependsOn:
+      - "IGW"
+    Properties:
+      AllocationId: !GetAtt NatEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  PrivateRouteToNatGateway:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      RouteTableId: !Ref PrivateRouteTable
+      NatGatewayId: !Ref NatGateway
+
+  PublicRouteToIGW:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      RouteTableId: !Ref PublicRouteTable
+      GatewayId: !Ref IGW
+
+  PrivateSubnet1RouteAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  PublicSubnet1RouteAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
 
 Outputs:
   WebEndpoint:
