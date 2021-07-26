@@ -1,5 +1,5 @@
 import { ApiGatewayResponse } from '../../common/apigateway/apigateway-response';
-import { BlockchainDynamoClientRepository } from '../../common/repositories/blockchain.dynamodb.repository';
+import { BlockchainDynamoClientRepository } from '../../common/repositories/blockchain.dynamo.repository';
 import { LambdaApp } from '../../apps/lambda-app';
 import { GetBlockchains } from '../../apps/blockchains/get-all';
 
