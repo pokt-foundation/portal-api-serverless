@@ -22,4 +22,4 @@ export class GetBlockchains implements LambdaApp {
       return {statusCode: 500}
     }
   }
-} 
+}
