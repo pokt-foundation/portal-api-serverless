@@ -2,13 +2,16 @@
 import { BlockchainRepository } from './blockchain.repository';
 import { DynamoDB } from 'aws-sdk';
 import { Blockchain } from '../models/blockchain';
+
+const TABLE_NAME = 'Blockchains'
+
 export class BlockchainDynamoClientRepository implements BlockchainRepository {
   table: string
   docClient: DynamoDB.DocumentClient;
 
-  constructor(table: string) {
+  constructor(table?: string) {
     this.docClient = new DynamoDB.DocumentClient()
-    this.table = table
+    this.table = table || TABLE_NAME
   }
 
   // Retrieves all the available blockchains on the table
@@ -25,7 +28,6 @@ export class BlockchainDynamoClientRepository implements BlockchainRepository {
     do {
       const data = await this.docClient.scan(params).promise()
       data.Items?.forEach((blockchain) => blockchains.push(blockchain as Blockchain))
-      
       
       lastEvaluatedKey = data.LastEvaluatedKey
       params.ExclusiveStartKey = lastEvaluatedKey;
