@@ -20,7 +20,12 @@ import AatPlans from "../config/aat-plans.json";
 
 // import axios from 'axios'
 import {checkEnforcementJSON} from "../common/utils/enforcements/enforcements";
-import {ApiGatewayResponse} from "../common/apigateway/apigateway-response";
+import {
+  ApiGatewayResponse,
+  newErrorResponse,
+  newJSONResponse,
+} from "../common/apigateway/apigateway-response";
+import HttpStatusCode from "../common/utils/http-status-code";
 
 export class PocketRelayer {
   host: string;
@@ -108,8 +113,7 @@ export class PocketRelayer {
     requestTimeOut,
     overallTimeOut,
     relayRetries,
-  }: // TODO: Change ApiGatewayResponse for a more specific error handling solution
-  SendRelayOptions): Promise<ApiGatewayResponse> {
+  }: SendRelayOptions): Promise<ApiGatewayResponse> {
     if (relayRetries !== undefined && relayRetries >= 0) {
       this.relayRetries = relayRetries;
     }
@@ -155,12 +159,10 @@ export class PocketRelayer {
           typeID: application.id,
           serviceNode: "",
         });
-        return {
-          statusCode: 504,
-          body: JSON.stringify({
-            message: "Overall Timeout exceeded: " + overallTimeOut,
-          }),
-        };
+        return newErrorResponse(
+          HttpStatusCode.GATEWAY_TIMEOUT,
+          "Overall Timeout exceeded: " + overallTimeOut
+        );
       }
 
       // Send this relay attempt
@@ -208,14 +210,15 @@ export class PocketRelayer {
           blockchainEnforceResult && // Is this blockchain marked for result enforcement // and
           blockchainEnforceResult.toLowerCase() === "json" // the check is for JSON
         ) {
-          // TODO: Standarize responses
-          // Stringify parsed response to remove unneded slashes characters
-          return {
-            statusCode: 200,
-            body: JSON.stringify(JSON.parse(relayResponse.payload)),
-          };
+          return newJSONResponse(
+            HttpStatusCode.OK,
+            JSON.parse(relayResponse.payload)
+          );
         }
-        return {statusCode: 200, body: relayResponse.payload};
+        return {
+          statusCode: HttpStatusCode.OK,
+          body: relayResponse.payload,
+        };
       } else if (relayResponse instanceof RelayError) {
         // Record failure metric, retry if possible or fallback
         // If this is the last retry and fallback is available, mark the error not delivered
@@ -338,12 +341,10 @@ export class PocketRelayer {
     //     })
     //   }
     // }
-    return {
-      statusCode: 504,
-      body: JSON.stringify({
-        message: "Relay attempts exhausted",
-      }),
-    };
+    return newErrorResponse(
+      HttpStatusCode.GATEWAY_TIMEOUT,
+      "Relay attempts exhausted"
+    );
   }
 
   // Private function to allow relay retries
