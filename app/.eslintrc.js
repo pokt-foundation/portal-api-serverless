@@ -9,6 +9,7 @@ module.exports = {
         'plugin:@typescript-eslint/recommended',
     ],
     rules: {
+      '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/ban-types': [
         'error',
         {

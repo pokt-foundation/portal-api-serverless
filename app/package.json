@@ -30,6 +30,7 @@
   "dependencies": {
     "@pokt-network/pocket-js": "^0.6.13-rc",
     "aws-sdk": "^2.809.0",
-    "ioredis": "^4.27.6"
+    "ioredis": "^4.27.6",
+    "strong-cryptor": "^2.2.0"
   }
 }
