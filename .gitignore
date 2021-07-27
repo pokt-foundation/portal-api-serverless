@@ -119,4 +119,4 @@ dist
 
 # AWS SAM build
 .aws-sam
-samconfig.toml
+samconfig*.toml
