@@ -1,7 +1,7 @@
-import HttpStatusCode from "../utils/http-status-code";
+import HttpStatusCode from '../utils/http-status-code'
 export interface ApiGatewayResponse {
-  statusCode: number;
-  body?: string;
+  statusCode: number
+  body?: string
 }
 
 /**
@@ -10,15 +10,12 @@ export interface ApiGatewayResponse {
  * @param value json-serializable object
  * @returns ApiGatewayResponse
  */
-export const newJSONResponse = (
-  statusCode: HttpStatusCode,
-  value: object
-): ApiGatewayResponse => {
+export const newJSONResponse = (statusCode: HttpStatusCode, value: object): ApiGatewayResponse => {
   return {
     statusCode,
     body: JSON.stringify(value),
-  };
-};
+  }
+}
 
 /**
  * Provides a convenient wrapper to send error messages
@@ -26,9 +23,6 @@ export const newJSONResponse = (
  * @param message error message to display
  * @returns ApiGatewayResponse
  */
-export const newErrorResponse = (
-  statusCode: HttpStatusCode,
-  message: string
-): ApiGatewayResponse => {
-  return newJSONResponse(statusCode, {message});
-};
+export const newErrorResponse = (statusCode: HttpStatusCode, message: string): ApiGatewayResponse => {
+  return newJSONResponse(statusCode, { message })
+}

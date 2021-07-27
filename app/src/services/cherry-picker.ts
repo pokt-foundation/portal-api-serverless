@@ -1,6 +1,6 @@
 import { Node } from '@pokt-network/pocket-js'
 import { Redis } from 'ioredis'
-import { Application } from '../common/models/application';
+import { Application } from '../common/models/application'
 
 export class CherryPicker {
   checkDebug: boolean

@@ -1,13 +1,12 @@
-
-import { ApplicationRepository } from './application.repository';
-import { DynamoDB } from 'aws-sdk';
-import { Application } from '../models/application';
+import { ApplicationRepository } from './application.repository'
+import { DynamoDB } from 'aws-sdk'
+import { Application } from '../models/application'
 
 const TABLE_NAME = 'Applications'
 
 export class ApplicationDynamoClientRepository implements ApplicationRepository {
   table: string
-  docClient: DynamoDB.DocumentClient;
+  docClient: DynamoDB.DocumentClient
 
   constructor(table: string | undefined) {
     this.docClient = new DynamoDB.DocumentClient()
@@ -18,11 +17,11 @@ export class ApplicationDynamoClientRepository implements ApplicationRepository 
     const params: DynamoDB.DocumentClient.GetItemInput = {
       TableName: this.table,
       Key: {
-          "id": id
-      }
+        id: id,
+      },
     }
-  
-    const result: DynamoDB.DocumentClient.GetItemOutput = await this.docClient.get(params).promise();
-    return result.Item as Application;
-  } 
+
+    const result: DynamoDB.DocumentClient.GetItemOutput = await this.docClient.get(params).promise()
+    return result.Item as Application
+  }
 }

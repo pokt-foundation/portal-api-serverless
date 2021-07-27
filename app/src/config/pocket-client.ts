@@ -1,4 +1,4 @@
-import {Configuration} from "@pokt-network/pocket-js";
+import { Configuration } from '@pokt-network/pocket-js'
 
 const DEFAULT_POCKET_CONFIG = {
   MAX_DISPATCHERS: 50,
@@ -9,7 +9,7 @@ const DEFAULT_POCKET_CONFIG = {
   VALIDATE_RELAY_RESPONSES: undefined,
   REJECT_SELF_SIGNED_CERTIFICATES: undefined,
   USE_LEGACY_TX_CODEC: true,
-};
+}
 
 export const getDefaultPocketConfig = ({
   maxDispatchers,
@@ -32,21 +32,20 @@ export const getDefaultPocketConfig = ({
     sessionBlockFrequency,
     blockTime,
     validateRelayResponses || DEFAULT_POCKET_CONFIG.VALIDATE_RELAY_RESPONSES,
-    rejectSelfSignedCertificated ||
-      DEFAULT_POCKET_CONFIG.REJECT_SELF_SIGNED_CERTIFICATES,
+    rejectSelfSignedCertificated || DEFAULT_POCKET_CONFIG.REJECT_SELF_SIGNED_CERTIFICATES,
     useLegacyTXCodec || DEFAULT_POCKET_CONFIG.USE_LEGACY_TX_CODEC
-  );
-};
+  )
+}
 
 type PocketConfiguration = {
-  maxDispatchers?: number;
-  maxSessions?: number;
-  consensusNodeCount?: number;
-  requestTimeout?: number;
-  acceptDisputedResponses?: boolean;
-  sessionBlockFrequency: number;
-  blockTime: number;
-  validateRelayResponses?: number;
-  rejectSelfSignedCertificated?: boolean;
-  useLegacyTXCodec?: boolean;
-};
+  maxDispatchers?: number
+  maxSessions?: number
+  consensusNodeCount?: number
+  requestTimeout?: number
+  acceptDisputedResponses?: boolean
+  sessionBlockFrequency: number
+  blockTime: number
+  validateRelayResponses?: number
+  rejectSelfSignedCertificated?: boolean
+  useLegacyTXCodec?: boolean
+}

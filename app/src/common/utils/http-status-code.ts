@@ -1,6 +1,6 @@
 // Obtained from https://gist.github.com/scokmen/f813c904ef79022e84ab2409574d1b45
 
-"use strict";
+'use strict'
 
 /**
  * Hypertext Transfer Protocol (HTTP) response status codes.
@@ -381,4 +381,4 @@ enum HttpStatusCode {
   NETWORK_AUTHENTICATION_REQUIRED = 511,
 }
 
-export default HttpStatusCode;
+export default HttpStatusCode

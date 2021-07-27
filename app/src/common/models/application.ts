@@ -7,7 +7,7 @@ export interface Application {
   publicPocketAccount?: object
   freeTierApplicacationAccount?: object
   gatewayAAT: {
-    version: string,
+    version: string
     applicationPublicKey: string
     applicationSignature: string
     clientPublicKey: string
@@ -16,7 +16,7 @@ export interface Application {
     applicationSignature: string
     applicationPublicKey: string
     clientPublicKey: string
-  },
+  }
   aat?: object
   gatewaySettings: {
     secretKey: string
