@@ -6,17 +6,16 @@ import {RelayApplication} from "../../apps/applications/relay-app";
 import {ApiGatewayEvent} from "../../common/apigateway/apigateway-event";
 import {getDefaultPocketConfig} from "../../config/pocket-client";
 import AatPlans from "../../config/aat-plans.json";
-import {Pocket, HttpRpcProvider, Account} from "@pokt-network/pocket-js";
+import {
+  Pocket,
+  HttpRpcProvider,
+  Configuration,
+  Account,
+} from "@pokt-network/pocket-js";
 import {BlockchainDynamoClientRepository} from "../../common/repositories/blockchain.dynamo.repository";
 
-// Global variables are automatically cached by lambda memory, use wisely
+// Global variables are automatically cached by lambda memory, use with caution
 // https://medium.com/tensult/aws-lambda-function-issues-with-global-variables-eb5785d4b876
-let configuration;
-let redis;
-let pocket;
-let rpcProvider;
-const dispatchers: URL[] = [];
-
 const redisEndpoint = process.env["ELASTICACHE_HOST"] || "";
 const redisPort = process.env["ELASTICACHE_PORT"] || "";
 const pocketSessionBlockFrequency =
@@ -28,6 +27,24 @@ const dispatchURL = process.env["DISPATCH_URL"] || "";
 const databaseEncryptionKey = process.env["DATABASE_ENCRYPTION_KEY"] || "";
 const relayRetries = process.env["POCKET_RELAY_RETRIES"] || "";
 const aatPlan = process.env["AAT_PLAN"] || AatPlans.PREMIUM;
+
+let redis;
+let configuration: Configuration;
+let pocket;
+let rpcProvider;
+const dispatchers = ((): URL[] => {
+  const result: URL[] = [];
+  if (dispatchURL.indexOf(",")) {
+    const dispatcherArray = dispatchURL.split(",");
+
+    dispatcherArray.forEach(function (dispatcher) {
+      result.push(new URL(dispatcher));
+    });
+  } else {
+    result.push(new URL(dispatchURL));
+  }
+  return result;
+})();
 
 const checkRequiredEnvs = () => {
   if (!redisEndpoint) {
@@ -78,15 +95,6 @@ exports.handler = async (
       sessionBlockFrequency: parseInt(pocketSessionBlockFrequency),
       blockTime: parseInt(pocketBlockTime),
     });
-    if (dispatchURL.indexOf(",")) {
-      const dispatcherArray = dispatchURL.split(",");
-
-      dispatcherArray.forEach(function (dispatcher) {
-        dispatchers.push(new URL(dispatcher));
-      });
-    } else {
-      dispatchers.push(new URL(dispatchURL));
-    }
 
     rpcProvider = new HttpRpcProvider(dispatchers[0]);
     pocket = new Pocket(dispatchers, rpcProvider, configuration);
