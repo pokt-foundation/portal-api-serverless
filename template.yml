@@ -10,13 +10,12 @@ Description: >-
 # Transform section specifies one or more macros that AWS CloudFormation uses to process your template
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
 Transform:
-- AWS::Serverless-2016-10-31
+  - AWS::Serverless-2016-10-31
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
-      -
-        Label:
+      - Label:
           default: "VPC Config"
         Parameters:
           - "pVpcName"
@@ -33,8 +32,34 @@ Metadata:
         default: "CIDR for Private Subnet 1"
       pPublicSubnet1CIDR:
         default: "CIDR for Public Subnet 1"
-      
+
 Parameters:
+  # Portal-api related params
+  pocketSessionBlockFrequency:
+    Type: "String"
+    NoEcho: true
+  pocketBlockTime:
+    Type: "String"
+    NoEcho: true
+  dispatchURL:
+    Type: "String"
+    NoEcho: true
+  databaseEncryptionKey:
+    Type: "String"
+    NoEcho: true
+  pocketRelayRetries:
+    Type: "String"
+    NoEcho: true
+  aatPlan:
+    Type: "String"
+    NoEcho: true
+  clientPrivateKey:
+    Type: "String"
+    NoEcho: true
+  clientPassphrase:
+    Type: "String"
+    NoEcho: true
+  # Network params
   pVpcName:
     Description: "Name of the VPC"
     Type: "String"
@@ -53,7 +78,6 @@ Parameters:
     Default: "10.100.64.0/18"
     ## private subnet 2: 10.100.128.0/18
     ## public subnet 2: 10.100.192.0/18
-
 
 # Resources declares the AWS resources that you want to include in the stack
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
@@ -114,6 +138,8 @@ Resources:
         # Give Create/Read/Update/Delete Permissions to the SampleTable
         - DynamoDBCrudPolicy:
             TableName: !Ref Applications
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Blockchains
         - "AWSLambdaVPCAccessExecutionRole"
       VpcConfig:
         SecurityGroupIds:
@@ -123,18 +149,26 @@ Resources:
       Environment:
         Variables:
           # Make table name accessible as environment variable from function code during execution
-          TABLE_NAME: !Ref Applications
+          APP_TABLE_NAME: !Ref Applications
+          BLOCKCHAINS_TABLE_NAME: !Ref Blockchains
           ELASTICACHE_HOST:
             Fn::GetAtt: ["ECCluster", "RedisEndpoint.Address"]
           ELASTICACHE_PORT:
             Fn::GetAtt: ["ECCluster", "RedisEndpoint.Port"]
+          POCKET_SESSION_BLOCK_FREQUENCY: !Ref pocketSessionBlockFrequency
+          POCKET_BLOCK_TIME: !Ref pocketBlockTime
+          DISPATCH_URL: !Ref dispatchURL
+          DATABASE_ENCRYPTION_KEY: !Ref databaseEncryptionKey
+          POCKET_RELAY_RETRIES: !Ref pocketRelayRetries
+          AAT_PLAN: !Ref aatPlan
+          GATEWAY_CLIENT_PRIVATE_KEY: !Ref clientPrivateKey
+          GATEWAY_CLIENT_PASSPHRASE: !Ref clientPassphrase
       Events:
         Api:
           Type: Api
           Properties:
-            Path: /relay/{id}
-            Method: GET
-
+            Path: /relay/{host}/{id}
+            Method: POST
 
   # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
   Blockchains:
@@ -187,8 +221,7 @@ Resources:
       GroupDescription: "portal-api - ElastiCache Security Group"
       VpcId: !Ref VPC
       SecurityGroupIngress:
-        -
-          IpProtocol: "tcp"
+        - IpProtocol: "tcp"
           FromPort: 6379
           ToPort: 6379
           SourceSecurityGroupId: !Ref FunctionSecurityGroup
@@ -214,8 +247,7 @@ Resources:
       EnableDnsSupport: "true"
       EnableDnsHostnames: "true"
       Tags:
-        -
-          Key: "Name"
+        - Key: "Name"
           Value: !Ref "pVpcName"
 
   PrivateSubnet1:
@@ -225,8 +257,7 @@ Resources:
       CidrBlock: !Ref "pPrivateSubnet1CIDR"
       VpcId: !Ref VPC
       Tags:
-        -
-          Key: "Name"
+        - Key: "Name"
           Value: !Sub
             - "${VPC_NAME} Private Subnet 1"
             - VPC_NAME: !Ref pVpcName
@@ -238,8 +269,7 @@ Resources:
       CidrBlock: !Ref "pPublicSubnet1CIDR"
       VpcId: !Ref VPC
       Tags:
-        -
-          Key: "Name"
+        - Key: "Name"
           Value: !Sub
             - "${VPC_NAME} Public Subnet 1"
             - VPC_NAME: !Ref pVpcName
@@ -249,8 +279,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-        -
-          Key: "Name"
+        - Key: "Name"
           Value: "public-bikes-private-routetable"
 
   PublicRouteTable:
@@ -258,16 +287,14 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-        -
-          Key: "Name"
+        - Key: "Name"
           Value: "public-bikes-public-routetable"
 
   IGW:
     Type: "AWS::EC2::InternetGateway"
     Properties:
       Tags:
-        -
-          Key: "Name"
+        - Key: "Name"
           Value: "public-bikes-igw"
 
   IgwAttachment:
@@ -327,4 +354,3 @@ Outputs:
   oPrivateSubnet1:
     Value: !Ref PrivateSubnet1
     Description: "portal-api Private Subnet 1"
-
