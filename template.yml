@@ -167,7 +167,7 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Path: /relay/{host}/{id}
+            Path: /v1/{id}
             Method: POST
 
   # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}

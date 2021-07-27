@@ -11,6 +11,7 @@ export interface ApiGatewayRequestContext {
   resourcePath: string
   httpMethod: string
   apiId: string
+  domainPrefix?: string
 
   identity?: ApiGatewayRequestContextIdentity
 }

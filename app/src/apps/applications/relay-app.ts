@@ -49,9 +49,8 @@ export class RelayApplication implements LambdaApp {
 
   async run(event: ApiGatewayEvent): Promise<ApiGatewayResponse> {
     let id: string | undefined = event.pathParameters?.id
-    const host: string | undefined = event.pathParameters?.host
 
-    if (!id || !host) {
+    if (!id) {
       return {
         statusCode: 404,
         body: JSON.stringify({ message: 'application not found' }),
@@ -91,7 +90,9 @@ export class RelayApplication implements LambdaApp {
       }
 
       const pocketRelayer = new PocketRelayer({
-        host: host,
+        // Requires a wildcard domain setup
+        // https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html
+        host: event.requestContext.domainPrefix || '',
         origin: event.headers['origin'],
         userAgent: event.headers['User-Agent'],
         pocket: this.pocket,
