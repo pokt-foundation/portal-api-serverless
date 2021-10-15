@@ -120,3 +120,6 @@ dist
 # AWS SAM build
 .aws-sam
 samconfig*.toml
+
+# VSCode local config
+.vscode
